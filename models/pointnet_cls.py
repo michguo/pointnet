@@ -20,6 +20,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
     batch_size = point_cloud.get_shape()[0].value
     num_point = point_cloud.get_shape()[1].value
     end_points = {}
+    end_points['point_cloud'] = point_cloud
 
     with tf.variable_scope('transform_net1') as sc:
         transform = input_transform_net(point_cloud, is_training, bn_decay, K=3)
@@ -55,9 +56,10 @@ def get_model(point_cloud, is_training, bn_decay=None):
                          scope='conv5', bn_decay=bn_decay)
 
     # Symmetric function: max pooling
+    end_points['before_maxpool'] = net
     net = tf_util.max_pool2d(net, [num_point,1],
                              padding='VALID', scope='maxpool')
-
+    end_points['maxpool'] = net
     net = tf.reshape(net, [batch_size, -1])
     net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay)

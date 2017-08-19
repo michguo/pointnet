@@ -82,7 +82,8 @@ def evaluate(num_votes):
            'labels_pl': labels_pl,
            'is_training_pl': is_training_pl,
            'pred': pred,
-           'loss': loss}
+           'loss': loss,
+           'endpoints': end_points}
 
     eval_one_epoch(sess, ops, num_votes)
 
@@ -122,7 +123,7 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
                 feed_dict = {ops['pointclouds_pl']: rotated_data,
                              ops['labels_pl']: current_label[start_idx:end_idx],
                              ops['is_training_pl']: is_training}
-                loss_val, pred_val = sess.run([ops['loss'], ops['pred']],
+                loss_val, pred_val, endpoints = sess.run([ops['loss'], ops['pred'], ops['endpoints']],
                                           feed_dict=feed_dict)
                 batch_pred_sum += pred_val
                 batch_pred_val = np.argmax(pred_val, 1)
@@ -147,11 +148,33 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
                 fout.write('%d, %d\n' % (pred_val[i-start_idx], l))
                 
                 if pred_val[i-start_idx] != l and FLAGS.visu: # ERROR CASE, DUMP!
+                    print('current_data', current_data.shape)
+                    for k, v in endpoints.items():
+                        print(k, v.shape)
+                    before_maxpool = endpoints['before_maxpool'][i-start_idx]
+                    print('cur before_maxpool', before_maxpool.shape)
+                    argmax = np.argmax(before_maxpool, axis=0)
+                    print('argmax', argmax.shape)
+                    argmax = np.squeeze(argmax)
+                    cp_indices = np.unique(argmax)
+                    print('unique CP', cp_indices.shape)
+                    critical_points = current_data[i, cp_indices, :]
+                    print('current_data[cp_indices, :, :]', critical_points.shape)
+
+                    # Visualize the example point cloud.
                     img_filename = '%d_label_%s_pred_%s.jpg' % (error_cnt, SHAPE_NAMES[l],
                                                            SHAPE_NAMES[pred_val[i-start_idx]])
                     img_filename = os.path.join(DUMP_DIR, img_filename)
                     output_img = pc_util.point_cloud_three_views(np.squeeze(current_data[i, :, :]))
                     scipy.misc.imsave(img_filename, output_img)
+
+                    # Visualize critical points.
+                    img_filename = '%d_label_%s_pred_%s_critical.jpg' % (error_cnt, SHAPE_NAMES[l],
+                                                                SHAPE_NAMES[pred_val[i - start_idx]])
+                    img_filename = os.path.join(DUMP_DIR, img_filename)
+                    output_img = pc_util.point_cloud_three_views(np.squeeze(critical_points))
+                    scipy.misc.imsave(img_filename, output_img)
+
                     error_cnt += 1
                 
     log_string('eval mean loss: %f' % (loss_sum / float(total_seen)))
