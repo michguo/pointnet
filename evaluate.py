@@ -151,7 +151,11 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
                     if error_cnt < 50:
                         # Grab data from point cloud.
                         pc = current_data[i]
-                        pc_util.pyplot_draw_point_cloud(pc)
+
+                        pc_name = '%d_label_%s_pred_%s.jpg' % (error_cnt,
+                                                            SHAPE_NAMES[l],
+                                                            SHAPE_NAMES[pred_val[i-start_idx]])
+                        pc_util.pyplot_draw_point_cloud(pc, pc_name)
 
                         # Compute the critical points of the point cloud.
                         # before_maxpool = endpoints['before_maxpool'][i-start_idx]

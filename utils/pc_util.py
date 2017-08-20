@@ -171,6 +171,8 @@ def point_cloud_three_views(points):
 
 
 from PIL import Image
+
+
 def point_cloud_three_views_demo():
     """ Demo for draw_point_cloud function """
     points = read_ply('../third_party/mesh_sampling/piano.ply')
@@ -187,7 +189,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 
-def pyplot_draw_point_cloud(points):
+def pyplot_draw_point_cloud(points, title='Point Cloud'):
     """ points is a Nx3 numpy array """
     fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
@@ -201,7 +203,7 @@ def pyplot_draw_point_cloud(points):
 
     # Set window title
     fig = plt.gcf()
-    fig.canvas.set_window_title('My title')
+    fig.canvas.set_window_title(title)
 
     plt.show()
     #savefig(output_filename)
