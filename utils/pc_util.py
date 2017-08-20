@@ -226,8 +226,8 @@ from matplotlib import cm
 def pyplot_draw_point_cloud(points, weights='b', title='Point Cloud'):
     """ points is a Nx3 numpy array """
     fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    ax = fig.gca(projection='3d')
+    ax = fig.add_subplot(121, projection='3d')
+    # ax = fig.gca(projection='3d')
     p = ax.scatter(points[:, 0], points[:, 1], points[:, 2],
                c=weights,
                cmap=cm.jet,
@@ -239,6 +239,10 @@ def pyplot_draw_point_cloud(points, weights='b', title='Point Cloud'):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
+
+    # Plot the weight distribution
+    ax = fig.add_subplot(122)
+    ax.hist(weights, 50)
 
     # Set window title
     fig = plt.gcf()
