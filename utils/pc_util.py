@@ -225,9 +225,8 @@ from matplotlib import cm
 
 def pyplot_draw_point_cloud(points, weights='b', title='Point Cloud'):
     """ points is a Nx3 numpy array """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(15, 5))
     ax = fig.add_subplot(121, projection='3d')
-    # ax = fig.gca(projection='3d')
     p = ax.scatter(points[:, 0], points[:, 1], points[:, 2],
                c=weights,
                cmap=cm.jet,
