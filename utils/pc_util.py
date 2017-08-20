@@ -100,6 +100,35 @@ def critical_points(maxpool_input, pc):
     return cp, weights
 
 
+def pc_with_cp(maxpool_input):
+    """
+    Computes weights for every point in the point cloud. Weight is -1 if point is
+    not a critical point; weight is the activation value if point is a critical
+    point.
+
+    Args:
+        maxpool_input: (N, 1, 2014) The input feature map to the max pool layer.
+        pc: (N, 3) The point cloud example.
+
+    Returns:
+        weights: (N,) The weight of each point, -1 if not a critical point.
+    """
+    N = maxpool_input.shape[0]
+    maxpool_input = np.squeeze(maxpool_input)
+
+    # Get the critical point indices which contributed to each global feature.
+    cp_indices = np.argmax(maxpool_input, axis=0)
+    # cp_indices = np.unique(cp_indices)
+
+    # Get the activations of the critical points.
+    cp_weights = np.max(maxpool_input, axis=0)
+
+    weights = np.full((N,), -1, dtype=np.float16)
+    weights[cp_indices] = cp_weights
+
+    return weights
+
+
 # ----------------------------------------
 # Point cloud IO
 # ----------------------------------------
@@ -227,6 +256,8 @@ def pyplot_draw_point_cloud(points, weights='b', title='Point Cloud'):
     """ points is a Nx3 numpy array """
     fig = plt.figure(figsize=(15, 5))
     ax = fig.add_subplot(121, projection='3d')
+    # weights = np.where(weights == 0, weights, np.log(weights))
+    # weights = np.where(weights < 0, 0, weights)
     p = ax.scatter(points[:, 0], points[:, 1], points[:, 2],
                c=weights,
                cmap=cm.jet,
@@ -241,7 +272,7 @@ def pyplot_draw_point_cloud(points, weights='b', title='Point Cloud'):
 
     # Plot the weight distribution
     ax = fig.add_subplot(122)
-    ax.hist(weights, 50)
+    ax.hist(weights, 50, range=[0, 4])
 
     # Set window title
     fig = plt.gcf()
