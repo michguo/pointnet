@@ -155,16 +155,16 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
                         pc_name = '%d_label_%s_pred_%s.jpg' % (error_cnt,
                                                             SHAPE_NAMES[l],
                                                             SHAPE_NAMES[pred_val[i-start_idx]])
-                        pc_util.pyplot_draw_point_cloud(pc, pc_name)
+                        # pc_util.pyplot_draw_point_cloud(pc, pc_name)
 
                         # Compute the critical points of the point cloud.
                         bi = i - start_idx  # The index of the example within the batch.
                         maxpool_input = endpoints['before_maxpool'][bi]
-                        cp = pc_util.critical_points(maxpool_input, pc)
+                        cp, weights = pc_util.critical_points(maxpool_input, pc)
                         cp_name = '%d_label_%s_pred_%s_critical.jpg' % (error_cnt,
                                                                         SHAPE_NAMES[l],
                                                                         SHAPE_NAMES[pred_val[i-start_idx]])
-                        pc_util.pyplot_draw_point_cloud(cp, cp_name)
+                        pc_util.pyplot_draw_point_cloud(cp, weights=weights, title=cp_name)
 
                         # Visualize the example point cloud.
                         # img_filename = '%d_label_%s_pred_%s.jpg' % (error_cnt, SHAPE_NAMES[l],

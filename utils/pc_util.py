@@ -72,12 +72,32 @@ def volume_to_point_cloud(vol):
 # ----------------------------------------
 # Point Cloud Critical Points
 # ----------------------------------------
+
 def critical_points(maxpool_input, pc):
-    """Computes the critical points and weights of the point cloud."""
-    argmax = np.argmax(maxpool_input, axis=0)  # Get the point indices that contributed to each global feature.
-    argmax = np.squeeze(argmax)
-    cp_indices = np.unique(argmax)  # Get the unique set of points that contributed to global features.
-    return pc[cp_indices]
+    """
+    Computes the critical points and weights of the point cloud.
+
+    Args:
+        maxpool_input: (N, 1, 2014) The input feature map to the max pool layer.
+        pc: (N, 3) The point cloud example.
+
+    Returns:
+        cp: (M, 3) The critical points.
+        weights: (1024,) The weight of each global feature.
+    """
+    maxpool_input = np.squeeze(maxpool_input)
+
+    # Get the critical point indices which contributed to each global feature.
+    cp_indices = np.argmax(maxpool_input, axis=0)
+    # cp_indices = np.unique(cp_indices)
+
+    # Get the activations of the critical points.
+    weights = np.max(maxpool_input, axis=0)
+
+    # Get the critical points.
+    cp = pc[cp_indices]
+
+    return cp, weights
 
 
 # ----------------------------------------
@@ -200,14 +220,20 @@ if __name__ == "__main__":
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from matplotlib import cm
 
 
-def pyplot_draw_point_cloud(points, title='Point Cloud'):
+def pyplot_draw_point_cloud(points, weights='b', title='Point Cloud'):
     """ points is a Nx3 numpy array """
     fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
     ax = fig.gca(projection='3d')
-    ax.scatter(points[:, 0], points[:, 1], points[:, 2])
+    p = ax.scatter(points[:, 0], points[:, 1], points[:, 2],
+               c=weights,
+               cmap=cm.jet,
+               vmin=np.min(weights),
+               vmax=np.max(weights))
+    plt.colorbar(p)
 
     # Set axes labels
     ax.set_xlabel('x')
