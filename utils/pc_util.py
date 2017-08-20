@@ -107,6 +107,8 @@ def draw_point_cloud(input_points, canvasSize=500, space=200, diameter=25,
         return image
 
     points = input_points[:, switch_xyz]
+
+    # Rotate around x, y, and z axes
     M = euler2mat(zrot, yrot, xrot)
     points = (np.dot(M, points.transpose())).transpose()
 
@@ -130,12 +132,12 @@ def draw_point_cloud(input_points, canvasSize=500, space=200, diameter=25,
     dy = mask[:, 1]
     dv = disk[disk > 0]
     
-    # Order points by z-buffer
+    # Order points by z-buffer (depth?)
     zorder = np.argsort(points[:, 2])
     points = points[zorder, :]
     points[:, 2] = (points[:, 2] - np.min(points[:, 2])) / (np.max(points[:, 2] - np.min(points[:, 2])))
     max_depth = np.max(points[:, 2])
-       
+
     for i in range(points.shape[0]):
         j = points.shape[0] - i - 1
         x = points[j, 0]
@@ -149,9 +151,10 @@ def draw_point_cloud(input_points, canvasSize=500, space=200, diameter=25,
         py = dy + yc
         
         image[px, py] = image[px, py] * 0.7 + dv * (max_depth - points[j, 2]) * 0.3
-    
+
     image = image / np.max(image)
     return image
+
 
 def point_cloud_three_views(points):
     """ input points Nx3 numpy array (+y is up direction).
@@ -175,20 +178,34 @@ def point_cloud_three_views_demo():
     img = Image.fromarray(np.uint8(im_array*255.0))
     img.save('piano.jpg')
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     point_cloud_three_views_demo()
 
 
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-def pyplot_draw_point_cloud(points, output_filename):
+
+
+def pyplot_draw_point_cloud(points):
     """ points is a Nx3 numpy array """
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(points[:,0], points[:,1], points[:,2])
+    # ax = fig.add_subplot(111, projection='3d')
+    ax = fig.gca(projection='3d')
+    ax.scatter(points[:, 0], points[:, 1], points[:, 2])
+
+    # Set axes labels
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
+
+    # Set window title
+    fig = plt.gcf()
+    fig.canvas.set_window_title('My title')
+
+    plt.show()
     #savefig(output_filename)
+
 
 def pyplot_draw_volume(vol, output_filename):
     """ vol is of size vsize*vsize*vsize

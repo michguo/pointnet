@@ -1,18 +1,18 @@
+import os
+import sys
+
 import tensorflow as tf
 import numpy as np
 import argparse
 import socket
 import importlib
-import time
-import os
-import scipy.misc
-import sys
+import provider
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(BASE_DIR, 'models'))
 sys.path.append(os.path.join(BASE_DIR, 'utils'))
-import provider
-import pc_util
+import utils.pc_util as pc_util
 
 
 parser = argparse.ArgumentParser()
@@ -147,35 +147,27 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
                 total_correct_class[l] += (pred_val[i-start_idx] == l)
                 fout.write('%d, %d\n' % (pred_val[i-start_idx], l))
                 
-                if pred_val[i-start_idx] != l and FLAGS.visu: # ERROR CASE, DUMP!
-                    print('current_data', current_data.shape)
-                    for k, v in endpoints.items():
-                        print(k, v.shape)
-                    before_maxpool = endpoints['before_maxpool'][i-start_idx]
-                    print('cur before_maxpool', before_maxpool.shape)
-                    argmax = np.argmax(before_maxpool, axis=0)
-                    print('argmax', argmax.shape)
-                    argmax = np.squeeze(argmax)
-                    cp_indices = np.unique(argmax)
-                    print('unique CP', cp_indices.shape)
-                    critical_points = current_data[i, cp_indices, :]
-                    print('current_data[cp_indices, :, :]', critical_points.shape)
+                if pred_val[i-start_idx] != l and FLAGS.visu:  # ERROR CASE, DUMP!
+                    if error_cnt < 50:
+                        # Grab data from point cloud.
+                        pc = current_data[i]
+                        pc_util.pyplot_draw_point_cloud(pc)
 
-                    # Visualize the example point cloud.
-                    img_filename = '%d_label_%s_pred_%s.jpg' % (error_cnt, SHAPE_NAMES[l],
-                                                           SHAPE_NAMES[pred_val[i-start_idx]])
-                    img_filename = os.path.join(DUMP_DIR, img_filename)
-                    output_img = pc_util.point_cloud_three_views(np.squeeze(current_data[i, :, :]))
-                    scipy.misc.imsave(img_filename, output_img)
+                        # Compute the critical points of the point cloud.
+                        # before_maxpool = endpoints['before_maxpool'][i-start_idx]
+                        # argmax = np.argmax(before_maxpool, axis=0)
+                        # argmax = np.squeeze(argmax)
+                        # cp_indices = np.unique(argmax)
+                        # critical_points = current_data[i, cp_indices, :]
 
-                    # Visualize critical points.
-                    img_filename = '%d_label_%s_pred_%s_critical.jpg' % (error_cnt, SHAPE_NAMES[l],
-                                                                SHAPE_NAMES[pred_val[i - start_idx]])
-                    img_filename = os.path.join(DUMP_DIR, img_filename)
-                    output_img = pc_util.point_cloud_three_views(np.squeeze(critical_points))
-                    scipy.misc.imsave(img_filename, output_img)
+                        # Visualize the example point cloud.
+                        # img_filename = '%d_label_%s_pred_%s.jpg' % (error_cnt, SHAPE_NAMES[l],
+                        #                                        SHAPE_NAMES[pred_val[i-start_idx]])
+                        # img_filename = os.path.join(DUMP_DIR, img_filename)
+                        # output_img = pc_util.point_cloud_three_views(np.squeeze(current_data[i, :, :]))
+                        # scipy.misc.imsave(img_filename, output_img)
 
-                    error_cnt += 1
+                        error_cnt += 1
                 
     log_string('eval mean loss: %f' % (loss_sum / float(total_seen)))
     log_string('eval accuracy: %f' % (total_correct / float(total_seen)))
@@ -184,7 +176,6 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
     class_accuracies = np.array(total_correct_class)/np.array(total_seen_class,dtype=np.float)
     for i, name in enumerate(SHAPE_NAMES):
         log_string('%10s:\t%0.3f' % (name, class_accuracies[i]))
-    
 
 
 if __name__=='__main__':
