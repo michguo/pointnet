@@ -50,8 +50,6 @@ def point_cloud_to_volume(points, vsize, radius=1.0):
     vol[locations[:,0],locations[:,1],locations[:,2]] = 1.0
     return vol
 
-#a = np.zeros((16,1024,3))
-#print point_cloud_to_volume_batch(a, 12, 1.0, False).shape
 
 def volume_to_point_cloud(vol):
     """ vol is occupancy grid (value = 0 or 1) of size vsize*vsize*vsize
@@ -69,6 +67,18 @@ def volume_to_point_cloud(vol):
         return np.zeros((0,3))
     points = np.vstack(points)
     return points
+
+
+# ----------------------------------------
+# Point Cloud Critical Points
+# ----------------------------------------
+def critical_points(maxpool_input, pc):
+    """Computes the critical points and weights of the point cloud."""
+    argmax = np.argmax(maxpool_input, axis=0)  # Get the point indices that contributed to each global feature.
+    argmax = np.squeeze(argmax)
+    cp_indices = np.unique(argmax)  # Get the unique set of points that contributed to global features.
+    return pc[cp_indices]
+
 
 # ----------------------------------------
 # Point cloud IO
@@ -184,6 +194,9 @@ def point_cloud_three_views_demo():
 if __name__ == "__main__":
     point_cloud_three_views_demo()
 
+# ----------------------------------------
+# Matplotlib Pyplot Visualization
+# ----------------------------------------
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
